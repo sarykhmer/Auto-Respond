@@ -1,7 +1,11 @@
 {
+  "name": "telegram-autoresponder",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
   "dependencies": {
-    "dotenv": "^18.0.8",
-    "input": "^1.0.1",
-    "telegram": "^2.26.22"
+    "telegram": "^2.26.21"
   }
 }
