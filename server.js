@@ -5,7 +5,8 @@ const { NewMessage } = require('telegram/events');
 // 1. Configuration
 const apiId = 39589438; // Replace with your api_id from my.telegram.org
 const apiHash = '542e033042efcd385b802776ca07af97'; // Replace with your api_hash from my.telegram.org
-const TARGET_GROUP_ID = "-1004410264257"; // Replace with your target group ID
+// const TARGET_GROUP_ID = "-1004410264257";
+const TARGET_GROUP_ID = "-1003877348713";
 const savedSessionString = "1BQANOTEuMTA4LjU2LjExMwG7L3pcMppoWiClR5d/wJh1OzXX1Ko/xsqxl8KhmRpiKDVWzKSv1aQkHgIxLZCpied8cNGa3gdMGrREcRaeIMt0tuO+ZjJCqrR2FPwLbsZ7LD/hYSM9aJfnySEQmVXqKO/yiRQNR4vgp2uVqHchvRUB/m/JzmBX4FLeNCj5Qyi021DwcDmrXZnGfSJyx1Tq3AJU13p0HxYUWic2r5qx8y+T5L6n4XjOVVyXUnfbtL1ffftO5zzDFMuYtp4qUuig1x8vBplBUWTiMFZTb1FiRGl/0n2BSSo9B6wwhhFQUEvIKqRSYUKXuUUSaZtvPinJyGPkyexNI6qLS2PgWZTBIVkMcw==";
 
 // 2. Session Handling
