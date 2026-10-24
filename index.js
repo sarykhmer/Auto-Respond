@@ -19,45 +19,59 @@ const controlHost = '0.0.0.0';
 const controlPort = Number(process.env.SERVER_PORT || process.env.PORT || 3000);
 const indexHtml = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
 
-// Optional: set ALLOWED_ORIGIN (e.g. https://yourhost.com) only if the page is hosted elsewhere
-const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || '';
+// Cross-origin support. Set ALLOWED_ORIGIN to one or more origins, comma-separated:
+//   ALLOWED_ORIGIN=https://site-a.com,https://yourname.github.io
+// Use "*" to allow any origin (anyone could then toggle your settings), or "null" for file:// pages.
+// Leave unset if index.html is served by this server (same origin).
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGIN || '')
+    .split(',')
+    .map(origin => origin.trim().replace(/\/+$/, ''))
+    .filter(Boolean);
 
-function send(response, status, body, contentType = 'text/plain; charset=utf-8') {
-    const headers = { 'Content-Type': contentType, 'Cache-Control': 'no-store' };
-    if (ALLOWED_ORIGIN) {
-        headers['Access-Control-Allow-Origin'] = ALLOWED_ORIGIN;
+function send(request, response, status, body, contentType = 'text/plain; charset=utf-8') {
+    const headers = {
+        'Content-Type': contentType,
+        'Cache-Control': 'no-store',
+        'Vary': 'Origin'
+    };
+
+    const origin = request.headers.origin;
+    if (origin && (ALLOWED_ORIGINS.includes('*') || ALLOWED_ORIGINS.includes(origin))) {
+        headers['Access-Control-Allow-Origin'] = ALLOWED_ORIGINS.includes('*') ? '*' : origin;
         headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS';
         headers['Access-Control-Allow-Headers'] = 'Content-Type';
+        headers['Access-Control-Max-Age'] = '600';
     }
+
     response.writeHead(status, headers);
     response.end(body);
 }
 
-const sendJson = (response, status, data) =>
-    send(response, status, JSON.stringify(data), 'application/json');
+const sendJson = (request, response, status, data) =>
+    send(request, response, status, JSON.stringify(data), 'application/json');
 
 http.createServer((request, response) => {
     const pathname = new URL(request.url, 'http://localhost').pathname;
 
     // CORS preflight
     if (request.method === 'OPTIONS') {
-        send(response, 204, '');
+        send(request, response, 204, '');
         return;
     }
 
     if (request.method === 'GET' && pathname === '/') {
-        send(response, 200, indexHtml, 'text/html; charset=utf-8');
+        send(request, response, 200, indexHtml, 'text/html; charset=utf-8');
         return;
     }
 
     if (request.method === 'GET' && pathname === '/api/settings') {
-        sendJson(response, 200, { needWch_on, moveToArr_on });
+        sendJson(request, response, 200, { needWch_on, moveToArr_on });
         return;
     }
 
     if (request.method === 'POST' && pathname === '/api/settings') {
         if (!request.headers['content-type']?.startsWith('application/json')) {
-            send(response, 415, 'Expected application/json');
+            send(request, response, 415, 'Expected application/json');
             return;
         }
 
@@ -74,7 +88,7 @@ http.createServer((request, response) => {
         });
         request.on('end', () => {
             if (tooLarge) {
-                send(response, 413, 'Request body too large');
+                send(request, response, 413, 'Request body too large');
                 return;
             }
 
@@ -82,14 +96,14 @@ http.createServer((request, response) => {
             try {
                 update = JSON.parse(body);
             } catch {
-                send(response, 400, 'Invalid JSON');
+                send(request, response, 400, 'Invalid JSON');
                 return;
             }
 
             if (!update || typeof update !== 'object' || Array.isArray(update) ||
                 !['needWch_on', 'moveToArr_on'].includes(update.name) ||
                 typeof update.enabled !== 'boolean') {
-                send(response, 400, 'Expected a setting name and boolean value');
+                send(request, response, 400, 'Expected a setting name and boolean value');
                 return;
             }
 
@@ -99,12 +113,12 @@ http.createServer((request, response) => {
                 moveToArr_on = update.enabled;
             }
 
-            sendJson(response, 200, { needWch_on, moveToArr_on });
+            sendJson(request, response, 200, { needWch_on, moveToArr_on });
         });
         return;
     }
 
-    send(response, 404, 'Not found');
+    send(request, response, 404, 'Not found');
 }).listen(controlPort, controlHost, () => {
     console.log(`Controls available at http://${controlHost}:${controlPort}`);
 });
