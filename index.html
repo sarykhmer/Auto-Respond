@@ -73,6 +73,34 @@
         const btnNeedWch = document.getElementById('btnNeedWch');
         const btnMoveToArr = document.getElementById('btnMoveToArr');
         const error = document.getElementById('error');
+        // Where the API lives. Tried in order; the first one that answers is used.
+        //  1) '' = same origin (page served by index.js, e.g. http://localhost:3000)
+        //  2) the remote bot server, for when this page is hosted somewhere else
+        // You can also override with ?api=https://your-server in the page URL.
+        const REMOTE_API_BASE = 'https://tz7s8z8q9k.apps.bot-hosting.cloud';
+        const apiOverride = new URLSearchParams(location.search).get('api');
+        const API_BASES = apiOverride
+            ? [apiOverride]
+            : (location.protocol.startsWith('http') ? ['', REMOTE_API_BASE] : [REMOTE_API_BASE]);
+        let API_URL = '';
+
+        async function findApi() {
+            let lastError;
+            for (const base of API_BASES) {
+                const url = base.replace(/\/+$/, '') + '/api/settings';
+                try {
+                    const response = await fetch(url, { cache: 'no-store' });
+                    if (response.ok) {
+                        API_URL = url;
+                        return await response.json();
+                    }
+                    lastError = new Error('Server responded with ' + response.status + ' at ' + url);
+                } catch (e) {
+                    lastError = new Error('Cannot reach ' + (url) + ' (server offline, wrong URL, or CORS not allowed)');
+                }
+            }
+            throw lastError;
+        }
 
         const settings = {
             needWch_on: false,
@@ -99,11 +127,7 @@
             error.textContent = '';
 
             try {
-                const API_URL = 'https://tz7s8z8q9k.apps.bot-hosting.cloud/api/settings';
-
-                fetch(API_URL); // Load settings
-
-                fetch(API_URL, { // Update settings
+                const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, enabled: nextValue })
@@ -129,13 +153,7 @@
             button.addEventListener('click', () => toggleSetting(name));
         }
 
-        fetch('/api/settings')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Could not load the current settings.');
-                }
-                return response.json();
-            })
+        findApi()
             .then(data => {
                 Object.assign(settings, data);
                 renderSettings();
