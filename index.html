@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Server Controls</title>
+    <style>
+        body {
+            max-width: 560px;
+            margin: 48px auto;
+            padding: 0 20px;
+            color: #18212f;
+            font-family: system-ui, sans-serif;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        button {
+            min-width: 100px;
+            padding: 10px 16px;
+            border: 0;
+            border-radius: 8px;
+            color: white;
+            background: #2449ce;
+            font: inherit;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        button[aria-pressed="false"] {
+            color: #263246;
+            background: #e61c1f;
+        }
+
+        button:disabled {
+            cursor: wait;
+            opacity: 0.65;
+        }
+
+        #error {
+            color: #b42318;
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <h1>Server Controls</h1>
+        <p>Choose which matching messages can trigger an automatic respone.</p>
+        <section>
+            <span>Need WCH</span>
+            <button id="btnNeedWch" type="button" disabled>Loading…</button>
+        </section>
+        <section>
+            <span>Move to ARR</span>
+            <button id="btnMoveToArr" type="button" disabled>Loading…</button>
+        </section>
+        <p id="error" role="alert" aria-live="polite"></p>
+    </main>
+    <script>
+        const btnNeedWch = document.getElementById('btnNeedWch');
+        const btnMoveToArr = document.getElementById('btnMoveToArr');
+        const error = document.getElementById('error');
+
+        const settings = {
+            needWch_on: false,
+            moveToArr_on: false
+        };
+        const toggles = {
+            needWch_on: btnNeedWch,
+            moveToArr_on: btnMoveToArr
+        };
+
+        function renderSettings() {
+            for (const [name, button] of Object.entries(toggles)) {
+                button.textContent = settings[name] ? 'ON' : 'OFF';
+                button.setAttribute('aria-pressed', String(settings[name]));
+            }
+        }
+
+        async function toggleSetting(name) {
+            const previousValue = settings[name];
+            const nextValue = !previousValue;
+            for (const toggle of Object.values(toggles)) {
+                toggle.disabled = true;
+            }
+            error.textContent = '';
+
+            try {
+                const response = await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, enabled: nextValue })
+                });
+                if (!response.ok) {
+                    throw new Error('Could not update the setting.');
+                }
+
+                Object.assign(settings, await response.json());
+                renderSettings();
+            } catch (requestError) {
+                settings[name] = previousValue;
+                renderSettings();
+                error.textContent = requestError.message;
+            } finally {
+                for (const toggle of Object.values(toggles)) {
+                    toggle.disabled = false;
+                }
+            }
+        }
+
+        for (const [name, button] of Object.entries(toggles)) {
+            button.addEventListener('click', () => toggleSetting(name));
+        }
+
+        fetch('/api/settings')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Could not load the current settings.');
+                }
+                return response.json();
+            })
+            .then(data => {
+                Object.assign(settings, data);
+                renderSettings();
+                for (const button of Object.values(toggles)) {
+                    button.disabled = false;
+                }
+            })
+            .catch(fetchError => {
+                error.textContent = fetchError.message;
+                btnNeedWch.textContent = 'Unavailable';
+                btnMoveToArr.textContent = 'Unavailable';
+            });
+    </script>
+</body>
+
+</html>
