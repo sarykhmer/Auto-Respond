@@ -19,22 +19,45 @@ const controlHost = '0.0.0.0';
 const controlPort = Number(process.env.SERVER_PORT || process.env.PORT || 3000);
 const indexHtml = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
 
+// Optional: set ALLOWED_ORIGIN (e.g. https://yourhost.com) only if the page is hosted elsewhere
+const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || '';
+
+function send(response, status, body, contentType = 'text/plain; charset=utf-8') {
+    const headers = { 'Content-Type': contentType, 'Cache-Control': 'no-store' };
+    if (ALLOWED_ORIGIN) {
+        headers['Access-Control-Allow-Origin'] = ALLOWED_ORIGIN;
+        headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS';
+        headers['Access-Control-Allow-Headers'] = 'Content-Type';
+    }
+    response.writeHead(status, headers);
+    response.end(body);
+}
+
+const sendJson = (response, status, data) =>
+    send(response, status, JSON.stringify(data), 'application/json');
+
 http.createServer((request, response) => {
-    if (request.method === 'GET' && request.url === '/') {
-        response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-        response.end(indexHtml);
+    const pathname = new URL(request.url, 'http://localhost').pathname;
+
+    // CORS preflight
+    if (request.method === 'OPTIONS') {
+        send(response, 204, '');
         return;
     }
 
-    if (request.method === 'GET' && request.url === '/api/settings') {
-        response.writeHead(200, { 'Content-Type': 'application/json' });
-        response.end(JSON.stringify({ needWch_on, moveToArr_on }));
+    if (request.method === 'GET' && pathname === '/') {
+        send(response, 200, indexHtml, 'text/html; charset=utf-8');
         return;
     }
 
-    if (request.method === 'POST' && request.url === '/api/settings') {
+    if (request.method === 'GET' && pathname === '/api/settings') {
+        sendJson(response, 200, { needWch_on, moveToArr_on });
+        return;
+    }
+
+    if (request.method === 'POST' && pathname === '/api/settings') {
         if (!request.headers['content-type']?.startsWith('application/json')) {
-            response.writeHead(415).end('Expected application/json');
+            send(response, 415, 'Expected application/json');
             return;
         }
 
@@ -42,14 +65,16 @@ http.createServer((request, response) => {
         let tooLarge = false;
         request.setEncoding('utf8');
         request.on('data', chunk => {
+            if (tooLarge) return;
             body += chunk;
             if (body.length > 1024) {
                 tooLarge = true;
+                body = '';
             }
         });
         request.on('end', () => {
             if (tooLarge) {
-                response.writeHead(413).end('Request body too large');
+                send(response, 413, 'Request body too large');
                 return;
             }
 
@@ -57,14 +82,14 @@ http.createServer((request, response) => {
             try {
                 update = JSON.parse(body);
             } catch {
-                response.writeHead(400).end('Invalid JSON');
+                send(response, 400, 'Invalid JSON');
                 return;
             }
 
             if (!update || typeof update !== 'object' || Array.isArray(update) ||
                 !['needWch_on', 'moveToArr_on'].includes(update.name) ||
                 typeof update.enabled !== 'boolean') {
-                response.writeHead(400).end('Expected a setting name and boolean value');
+                send(response, 400, 'Expected a setting name and boolean value');
                 return;
             }
 
@@ -74,13 +99,12 @@ http.createServer((request, response) => {
                 moveToArr_on = update.enabled;
             }
 
-            response.writeHead(200, { 'Content-Type': 'application/json' });
-            response.end(JSON.stringify({ needWch_on, moveToArr_on }));
+            sendJson(response, 200, { needWch_on, moveToArr_on });
         });
         return;
     }
 
-    response.writeHead(404).end('Not found');
+    send(response, 404, 'Not found');
 }).listen(controlPort, controlHost, () => {
     console.log(`Controls available at http://${controlHost}:${controlPort}`);
 });
