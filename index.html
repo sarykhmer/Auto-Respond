@@ -99,7 +99,11 @@
             error.textContent = '';
 
             try {
-                const response = await fetch('/api/settings', {
+                const API_URL = 'https://tz7s8z8q9k.apps.bot-hosting.cloud/api/settings';
+
+                fetch(API_URL); // Load settings
+
+                fetch(API_URL, { // Update settings
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, enabled: nextValue })
