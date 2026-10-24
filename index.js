@@ -22,8 +22,8 @@ const indexHtml = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
 // Cross-origin support. Set ALLOWED_ORIGIN to one or more origins, comma-separated:
 //   ALLOWED_ORIGIN=https://site-a.com,https://yourname.github.io
 // Use "*" to allow any origin (anyone could then toggle your settings), or "null" for file:// pages.
-// Leave unset if index.html is served by this server (same origin).
-const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGIN || '')
+// If the variable is not set, it defaults to the local Live Server origins below.
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGIN || 'http://127.0.0.1:5500,http://localhost:5500')
     .split(',')
     .map(origin => origin.trim().replace(/\/+$/, ''))
     .filter(Boolean);
