@@ -23,7 +23,7 @@ const indexHtml = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
 //   ALLOWED_ORIGIN=https://site-a.com,https://yourname.github.io
 // Use "*" to allow any origin (anyone could then toggle your settings), or "null" for file:// pages.
 // If the variable is not set, it defaults to the local Live Server origins below.
-const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGIN || 'http://127.0.0.1:5500,https://server-controls.vercel.app')
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGIN || 'https://server-controls.vercel.app,http://127.0.0.1:5500')
     .split(',')
     .map(origin => origin.trim().replace(/\/+$/, ''))
     .filter(Boolean);
