@@ -15,8 +15,8 @@ let needWch_on = false;
 let moveToArr_on = false;
 let replyToMessage_At = 0;
 
-const controlHost = '127.0.0.1';
-const controlPort = 3000;
+const controlHost = '0.0.0.0';
+const controlPort = Number(process.env.PORT || 3000);
 const indexHtml = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
 
 http.createServer((request, response) => {
