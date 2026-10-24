@@ -11,7 +11,7 @@ const apiHash = process.env.TELEGRAM_API_HASH;
 const TARGET_GROUP_ID = process.env.TARGET_GROUP_ID;
 const savedSessionString = process.env.TELEGRAM_SESSION;
 
-let needWch_on = true;
+let needWch_on = false;
 let moveToArr_on = false;
 let replyToMessage_At = 0;
 
