@@ -17,7 +17,7 @@ let replyToMessage_At = 0;
 
 const controlHost = '0.0.0.0';
 const controlPort = Number(process.env.SERVER_PORT || process.env.PORT || 3000);
-const indexHtml = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'Auto-Res-FrontEnd', 'index.html'), 'utf8');
 
 // Cross-origin support. Set ALLOWED_ORIGIN to one or more origins, comma-separated:
 //   ALLOWED_ORIGIN=https://site-a.com,https://yourname.github.io
