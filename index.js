@@ -2,8 +2,6 @@ const { TelegramClient } = require('telegram');
 const { StringSession } = require('telegram/sessions');
 const { NewMessage } = require('telegram/events');
 const http = require('http');
-const fs = require('fs');
-const path = require('path');
 
 // 1. Safe Configuration via Cloud Environment Variables
 const apiId = parseInt(process.env.TELEGRAM_API_ID);
@@ -17,7 +15,6 @@ let replyToMessage_At = 0;
 
 const controlHost = '0.0.0.0';
 const controlPort = Number(process.env.SERVER_PORT || process.env.PORT || 3000);
-const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'Auto-Res-FrontEnd', 'index.html'), 'utf8');
 
 // Cross-origin support. Set ALLOWED_ORIGIN to one or more origins, comma-separated:
 //   ALLOWED_ORIGIN=https://site-a.com,https://yourname.github.io
@@ -60,7 +57,7 @@ http.createServer((request, response) => {
     }
 
     if (request.method === 'GET' && pathname === '/') {
-        send(request, response, 200, indexHtml, 'text/html; charset=utf-8');
+        send(request, response, 200, 'Auto-responder API is running. Controls: https://server-controls.vercel.app');
         return;
     }
 
