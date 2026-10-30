@@ -190,7 +190,7 @@ async function replyToMessage(client, incomingText, chatId) {
         await client.sendMessage(BigInt(chatId), {
             message: "Note b"
         });
-        replyToMessage_At = Date.now() + 10_000;
+        replyToMessage_At = Date.now() + 1000;
         console.log(`Replied to message: ${incomingText} =>> Note b`);
     } catch (error) {
         console.error("Error sending message:", error);
@@ -217,7 +217,7 @@ const stringSession = new StringSession(savedSessionString);
             const incomingText = message.text ? message.text.toLowerCase() : "";
             const chatId = message.chatId.toString();
             // need 1 wch
-            if (incomingText.includes("need") && /\b\s*wch\b/.test(incomingText)) {
+            if (incomingText.includes("need") && /\b\d*\s*wch\b/.test(incomingText)) {
                 if (!needWch_on || Date.now() < replyToMessage_At) {
                     return;
                 }
@@ -227,8 +227,8 @@ const stringSession = new StringSession(savedSessionString);
             //move to arr
             if ("move to arr" === incomingText ||
                 "move to arrival" === incomingText ||
-                (incomingText.includes("need") && /\b\s*staff\b/.test(incomingText) && incomingText.includes("arr")) ||
-                (incomingText.includes("need") && /\b\s*staff\b/.test(incomingText) && incomingText.includes("arrival"))) {
+                (incomingText.includes("need") && /\b\d\s*staff\b/.test(incomingText) && incomingText.includes("arr")) ||
+                (incomingText.includes("need") && /\b\d\s*staff\b/.test(incomingText) && incomingText.includes("arrival"))) {
                 if (!moveToArr_on || Date.now() < replyToMessage_At) {
                     return;
                 }
