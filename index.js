@@ -190,7 +190,7 @@ async function replyToMessage(client, incomingText, chatId) {
         await client.sendMessage(BigInt(chatId), {
             message: "Note b"
         });
-        replyToMessage_At = Date.now() + 1000;
+        replyToMessage_At = Date.now() + 60_000;
         console.log(`Replied to message: ${incomingText} =>> Note b`);
     } catch (error) {
         console.error("Error sending message:", error);
